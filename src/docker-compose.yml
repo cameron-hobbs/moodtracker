@@ -1,0 +1,49 @@
+version: '3.3'
+services:
+  database:
+    platform: linux/x86_64
+    image: mysql:5.7
+    container_name: moodtracker_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'moodtracker_local'
+      MYSQL_USER: 'moodtracker_local'
+      MYSQL_PASSWORD: 'moodtracker_local'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - 'mysqldbvolume:/var/lib/mysql'
+  queue:
+    platform: linux/x86_64
+    image: "rabbitmq:3"
+    container_name: moodtracker_queue
+    restart: always
+    ports:
+      - "5672:5672"
+  app:
+    platform: linux/arm64
+    build: .
+    container_name: moodtracker_api
+    restart: always
+    ports:
+      - '8000:8000'
+    depends_on:
+      - database
+    environment:
+      DEBUG: 'True'
+      RDS_DB_NAME: 'moodtracker_local'
+      RDS_USER: 'moodtracker_local'
+      RDS_PASSWORD: 'moodtracker_local'
+      RDS_HOST: "host.docker.internal"
+      TXT_LOCAL_API_KEY: ""
+      ENVIRONMENT: "local"
+      BROKER_URL: "amqp://host.docker.internal"
+      TEST_SMS: "True"
+      WEBHOOK_USERNAME: "never_used_locally"
+      WEBHOOK_PASS: "never_used_locally"
+volumes:
+  mysqldbvolume:
+    driver: local

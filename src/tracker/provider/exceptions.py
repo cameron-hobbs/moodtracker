@@ -1,0 +1,2 @@
+class NoLongerSupported(NotImplementedError):
+    pass
